@@ -1,0 +1,385 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PAISA PATAM | Trading Risk Calculator</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #101827;
+    color: #ffffff;
+    padding: 18px;
+}
+
+.container {
+    max-width: 850px;
+    margin: auto;
+}
+
+header {
+    text-align: center;
+    padding: 25px 10px;
+}
+
+.logo {
+    color: #16c784;
+    font-size: 30px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.tagline {
+    color: #aab6c5;
+    margin-top: 8px;
+    font-size: 13px;
+    letter-spacing: 2px;
+}
+
+h2 {
+    margin: 15px 0;
+    font-size: 20px;
+}
+
+.panel {
+    background: #1c293b;
+    padding: 20px;
+    border-radius: 14px;
+    margin-bottom: 18px;
+    border: 1px solid #304158;
+}
+
+label {
+    display: block;
+    margin: 13px 0 7px;
+    color: #c4d0df;
+    font-size: 14px;
+}
+
+input, select {
+    width: 100%;
+    padding: 13px;
+    background: #29394e;
+    color: white;
+    border: 1px solid #455a73;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 18px;
+}
+
+.calculate {
+    background: #16c784;
+    color: #071b16;
+}
+
+.reset {
+    background: #2878d0;
+    color: white;
+    margin-top: 10px;
+}
+
+.result {
+    display: none;
+}
+
+.result-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 0;
+    border-bottom: 1px solid #34445a;
+}
+
+.result-row span:first-child {
+    color: #b9c5d4;
+}
+
+.result-row strong {
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.green {
+    color: #16c784;
+}
+
+.red {
+    color: #ea3943;
+}
+
+.note {
+    color: #aab6c5;
+    font-size: 12px;
+    line-height: 1.6;
+    text-align: center;
+    margin: 20px 0;
+}
+
+footer {
+    text-align: center;
+    color: #8291a5;
+    font-size: 12px;
+    padding: 20px 0;
+}
+
+@media (min-width: 600px) {
+    .fields {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 18px;
+    }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+    <div class="logo">PAISA PATAM</div>
+    <div class="tagline">LEARN • TRADE • ANALYSE</div>
+    <h2>Trading Risk Calculator</h2>
+</header>
+
+<div class="panel">
+    <h2>Trade Details</h2>
+
+    <div class="fields">
+
+        <div>
+            <label>Trading Instrument</label>
+            <select id="mode">
+                <option value="equity">Equity</option>
+                <option value="options">Options</option>
+            </select>
+        </div>
+
+        <div>
+            <label>Trade Direction</label>
+            <select id="direction">
+                <option value="buy">BUY</option>
+                <option value="sell">SELL</option>
+            </select>
+        </div>
+
+        <div>
+            <label>Total Trading Capital (₹)</label>
+            <input type="number" id="capital" value="100000" min="1">
+        </div>
+
+        <div>
+            <label>Risk Per Trade (%)</label>
+            <input type="number" id="riskPercent" value="1" min="0.01" max="100" step="0.1">
+        </div>
+
+        <div>
+            <label>Entry Price (₹)</label>
+            <input type="number" id="entry" value="500" min="0.01" step="0.01">
+        </div>
+
+        <div>
+            <label>Stop Loss Price (₹)</label>
+            <input type="number" id="stop" value="490" min="0.01" step="0.01">
+        </div>
+
+        <div>
+            <label>Lot Size / Quantity Unit</label>
+            <input type="number" id="lot" value="1" min="1" step="1">
+        </div>
+
+    </div>
+
+    <button class="calculate" onclick="calculateRisk()">
+        CALCULATE RISK
+    </button>
+
+    <button class="reset" onclick="resetCalculator()">
+        RESET
+    </button>
+</div>
+
+<div class="panel result" id="result">
+    <h2>Risk Analysis</h2>
+
+    <div class="result-row">
+        <span>Risk Budget</span>
+        <strong id="budget"></strong>
+    </div>
+
+    <div class="result-row">
+        <span>Risk Per Share / Unit</span>
+        <strong id="unitRisk"></strong>
+    </div>
+
+    <div class="result-row">
+        <span>Maximum Quantity</span>
+        <strong id="quantity"></strong>
+    </div>
+
+    <div class="result-row">
+        <span>Number of Lots</span>
+        <strong id="lots"></strong>
+    </div>
+
+    <div class="result-row">
+        <span>Position Value</span>
+        <strong id="exposure"></strong>
+    </div>
+
+    <div class="result-row">
+        <span>Actual Maximum Risk</span>
+        <strong id="actualRisk" class="red"></strong>
+    </div>
+
+    <h2>Profit Targets</h2>
+
+    <div class="result-row">
+        <span>Target 1 : 1</span>
+        <strong id="target1" class="green"></strong>
+    </div>
+
+    <div class="result-row">
+        <span>Target 1 : 2</span>
+        <strong id="target2" class="green"></strong>
+    </div>
+
+    <div class="result-row">
+        <span>Target 1 : 3</span>
+        <strong id="target3" class="green"></strong>
+    </div>
+</div>
+
+<p class="note">
+    This calculator is an educational and risk-management tool.
+    Results are estimates and exclude brokerage, taxes, slippage
+    and other transaction costs. Always verify quantities and
+    exchange lot sizes before placing a trade.
+</p>
+
+<footer>
+    © PAISA PATAM | LEARN • TRADE • ANALYSE
+</footer>
+
+</div>
+
+<script>
+function money(value) {
+    return "₹" + value.toLocaleString("en-IN", {
+        maximumFractionDigits: 2
+    });
+}
+
+function calculateRisk() {
+    const capital = Number(document.getElementById("capital").value);
+    const riskPercent = Number(document.getElementById("riskPercent").value);
+    const entry = Number(document.getElementById("entry").value);
+    const stop = Number(document.getElementById("stop").value);
+    const lot = Number(document.getElementById("lot").value);
+    const direction = document.getElementById("direction").value;
+    const mode = document.getElementById("mode").value;
+
+    if (
+        !Number.isFinite(capital) ||
+        !Number.isFinite(riskPercent) ||
+        !Number.isFinite(entry) ||
+        !Number.isFinite(stop) ||
+        !Number.isFinite(lot) ||
+        capital <= 0 || riskPercent <= 0 ||
+        riskPercent > 100 || entry <= 0 || stop <= 0 ||
+        lot < 1 || !Number.isInteger(lot)
+    ) {
+        alert("Please enter valid positive values. Lot size must be a whole number.");
+        return;
+    }
+
+    if (
+        (direction === "buy" && stop >= entry) ||
+        (direction === "sell" && stop <= entry)
+    ) {
+        alert("Stop Loss is on the wrong side of the Entry Price.");
+        return;
+    }
+
+    const riskBudget = capital * riskPercent / 100;
+    const unitRisk = Math.abs(entry - stop);
+
+    let quantity = Math.floor(riskBudget / unitRisk);
+
+    // Options quantities must be in complete lots.
+    if (mode === "options") {
+        quantity = Math.floor(quantity / lot) * lot;
+    }
+
+    // Limit quantity so position value does not exceed capital.
+    const capitalQuantity = Math.floor(capital / entry);
+
+    if (mode === "options") {
+        quantity = Math.min(
+            quantity,
+            Math.floor(capitalQuantity / lot) * lot
+        );
+    } else {
+        quantity = Math.min(quantity, capitalQuantity);
+    }
+
+    const actualRisk = quantity * unitRisk;
+    const exposure = quantity * entry;
+    const targetDistance = unitRisk;
+
+    function targetPrice(multiplier) {
+        return direction === "buy"
+            ? entry + targetDistance * multiplier
+            : entry - targetDistance * multiplier;
+    }
+
+    document.getElementById("budget").textContent = money(riskBudget);
+    document.getElementById("unitRisk").textContent = money(unitRisk);
+    document.getElementById("quantity").textContent = quantity;
+    document.getElementById("lots").textContent =
+        mode === "options" ? quantity / lot : "N/A";
+    document.getElementById("exposure").textContent = money(exposure);
+    document.getElementById("actualRisk").textContent = money(actualRisk);
+
+    document.getElementById("target1").textContent = money(targetPrice(1));
+    document.getElementById("target2").textContent = money(targetPrice(2));
+    document.getElementById("target3").textContent = money(targetPrice(3));
+
+    document.getElementById("result").style.display = "block";
+    document.getElementById("result").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+function resetCalculator() {
+    document.getElementById("mode").value = "equity";
+    document.getElementById("direction").value = "buy";
+    document.getElementById("capital").value = "100000";
+    document.getElementById("riskPercent").value = "1";
+    document.getElementById("entry").value = "500";
+    document.getElementById("stop").value = "490";
+    document.getElementById("lot").value = "1";
+    document.getElementById("result").style.display = "none";
+}
+</script>
+
+</body>
+</html>
